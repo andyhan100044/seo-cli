@@ -1,0 +1,21 @@
+image: gitpod/workspace-python:latest
+
+tasks:
+  - init: |
+      echo "Setting up SEO CLI environment..."
+      sudo apt-get update
+      sudo apt-get install -y docker.io docker-compose curl
+      docker --version
+      docker-compose --version
+      pip install -r requirements.txt
+
+github:
+  prebuilds:
+    main: true
+    branches: true
+    pullRequestFromBranch: true
+
+ports:
+  - port: 8080
+    onOpen: open-preview
+    visibility: public
