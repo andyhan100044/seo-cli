@@ -1007,6 +1007,217 @@ Python + SQLite + Docker组合适用于：
    git push -u origin main
    ```
 
+## 🚀 Gitpod使用避坑指南（实战经验）
+
+### Gitpod标准使用流程
+
+#### 第1步：从GitHub打开Gitpod
+```
+访问：https://gitpod.io/#https://github.com/USERNAME/reo-cli
+点击 "Login with GitHub"（用GitHub账号登录）
+等待3-5分钟预构建完成
+```
+
+#### 第2步：检查环境状态
+```bash
+# 检查当前目录
+pwd
+# 应该显示：/workspace/seo-cli 或 /home/gitpod/seo-cli
+
+# 检查文件
+ls -la
+# 应该看到：seo.py, skills/, external/, README.md
+```
+
+#### 第3步：配置Python环境
+```bash
+# 检查Python版本
+python3 --version
+# Gitpod默认有Python 3.12.3
+
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活虚拟环境
+source venv/bin/activate
+# 提示符会变成：(venv) vscode ➜ /workspaces/seo-cli
+
+# 安装依赖
+pip install -r requirements.txt
+```
+
+#### 第4步：运行CLI工具
+```bash
+# 查看帮助
+python seo.py --help
+
+# 发现热词
+python seo.py discover --limit 20
+
+# 分析关键词
+python seo.py intent --word "AI generator"
+```
+
+### ⚠️ Gitpod常见问题与解决方案
+
+#### 问题1：Python命令找不到
+**症状：**
+```
+bash: python: command not found
+```
+
+**原因：**
+- Gitpod默认没有 `python` 命令，只有 `python3`
+- 新版本Python需要使用 `python3` 而不是 `python`
+
+**解决：**
+```bash
+# 使用 python3 而不是 python
+python3 seo.py --help
+
+# 或者创建别名
+alias python=python3
+```
+
+#### 问题2：pip安装失败 - externally-managed-environment
+**症状：**
+```
+error: externally-managed-environment
+× This environment is externally managed
+```
+
+**原因：**
+- Python 3.12+ 引入了PEP 668，不允许系统级安装包
+- 必须使用虚拟环境
+
+**解决：**
+```bash
+# 必须使用虚拟环境
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### 问题3：虚拟环境未激活
+**症状：**
+- 安装的包无法导入
+- `seo.py` 找不到依赖
+
+**原因：**
+- 忘记激活虚拟环境
+- 新开终端后环境丢失
+
+**解决：**
+```bash
+# 重新激活
+source venv/bin/activate
+# 检查是否激活：提示符应该有 (venv) 前缀
+
+# 如果丢失，重新创建
+rm -rf venv
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### 问题4：代码未自动克隆
+**症状：**
+- 看到的是默认Gitpod工作区
+- 没有项目代码
+
+**原因：**
+- 第一次访问需要手动克隆
+
+**解决：**
+```bash
+# 手动克隆
+git clone https://github.com/andyhan100044/seo-cli.git
+cd seo-cli
+```
+
+#### 问题5：SearXNG Docker未启动
+**症状：**
+- 搜索功能报错
+- 连接被拒绝
+
+**原因：**
+- Docker容器未启动
+- .gitpod.yml未配置自动启动
+
+**解决：**
+```bash
+# 手动启动SearXNG
+docker-compose up -d
+
+# 检查状态
+docker ps
+curl http://localhost:8080/health
+```
+
+### 📊 Gitpod配置最佳实践
+
+#### .gitpod.yml 配置示例
+```yaml
+image: gitpod/workspace-python:latest
+
+tasks:
+  - init: |
+      echo "Setting up SEO CLI environment..."
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install -r requirements.txt
+      docker-compose up -d
+      echo "Environment ready!"
+
+ports:
+  - port: 8080
+    onOpen: open-preview
+    visibility: public
+```
+
+#### Gitpod使用技巧
+```bash
+# 1. 快速激活虚拟环境
+source venv/bin/activate && python seo.py discover --limit 20
+
+# 2. 检查虚拟环境状态
+which python  # 应该在 venv/bin/python
+
+# 3. 退出虚拟环境
+deactivate
+
+# 4. 查看已安装的包
+pip list
+
+# 5. 清理虚拟环境
+rm -rf venv
+```
+
+### 💡 Gitpod vs 本地开发对比
+
+| 特性 | Gitpod | 本地Docker |
+|------|--------|------------|
+| 环境准备 | ✅ 5分钟自动完成 | ❌ 需要手动安装Docker |
+| Python环境 | ❌ 需要手动配置 | ✅ Docker内已配置 |
+| 依赖安装 | ❌ 需要虚拟环境 | ✅ Docker内已安装 |
+| 数据持久 | ⚠️ 7天内保留 | ✅ 永久本地存储 |
+| 免费额度 | 50小时/月 | 无限制 |
+| 网络访问 | ✅ 无需代理 | ⚠️ 可能需要代理 |
+| 启动速度 | 3-5分钟 | 即时 |
+
+### 🎯 推荐：Gitpod + 虚拟环境组合
+
+**优势：**
+- ✅ 无需本地安装任何软件
+- ✅ 浏览器直接使用
+- ✅ 自动环境配置
+- ✅ 数据隔离，避免冲突
+
+**注意事项：**
+- 每月50小时免费额度
+- 7天不活跃会删除工作区
+- 需要稳定的网络连接
+
 ## 🛠️ 今日待办（Day 1）
 
 ### 上午（2小时）- 环境搭建
