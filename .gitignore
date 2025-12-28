@@ -123,7 +123,10 @@ outputs/
 results/
 *.csv
 *.json
-*.md
+# Don't ignore README.md and docs
+!README.md
+!快速上手指南.md
+!docs/*.md
 
 # IDE
 .vscode/
